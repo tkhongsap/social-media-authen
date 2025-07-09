@@ -1,16 +1,13 @@
-import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
+import { SessionManager } from "@/lib/oauth/server"
 import Dashboard from "@/components/dashboard"
 
 export default async function DashboardPage() {
-  const cookieStore = await cookies()
-  const session = cookieStore.get("line-session")
+  const session = await SessionManager.getSession()
 
   if (!session) {
     redirect("/")
   }
 
-  const user = JSON.parse(session.value)
-
-  return <Dashboard user={user} />
+  return <Dashboard user={session.user} session={session} />
 }

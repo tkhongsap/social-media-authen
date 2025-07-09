@@ -1,5 +1,5 @@
-import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
+import { SessionManager } from "@/lib/oauth/server"
 import LoginPage from "@/components/login-page"
 
 export default async function Home({
@@ -7,8 +7,7 @@ export default async function Home({
 }: {
   searchParams: Promise<{ error?: string; details?: string }>
 }) {
-  const cookieStore = await cookies()
-  const session = cookieStore.get("line-session")
+  const session = await SessionManager.getSession()
 
   if (session) {
     redirect("/dashboard")
