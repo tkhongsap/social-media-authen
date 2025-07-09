@@ -21,4 +21,3 @@ CODING_RULES
 •  Do not touch code that is unrelated to the task
 •  Write thorough tests for all major functionality
 •  Avoid making major changes to the patterns and architecture of how a feature works, after it has shown to work well, unless explicitly instructed
-CODING_RULES
