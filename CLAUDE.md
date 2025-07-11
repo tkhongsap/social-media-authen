@@ -21,6 +21,35 @@ npm start
 npm run lint
 ```
 
+## Development Workflow
+
+### OAuth Provider Setup
+1. **Add credentials to `.env.local`** (follow provider-specific setup guides)
+2. **Always restart the development server** after adding/changing environment variables
+3. **Test the OAuth flow** by accessing the login interface
+4. **Use provider-specific callback URLs**:
+   - Development: `http://localhost:3000/api/auth/[provider]/callback`
+   - Production: `https://yourdomain.com/api/auth/[provider]/callback`
+
+### Configuration Validation
+```bash
+# Check which providers are configured
+node -e "console.log(require('./lib/oauth/config').validateOAuthConfig())"
+```
+
+### Debugging Tips
+- Check browser console for authentication errors
+- Verify callback URLs match exactly in provider settings
+- Ensure environment variables are properly formatted
+- Restart server after any configuration changes
+
+### Key Development Rules
+- Always restart server after making changes to test functionality
+- Look for existing code patterns before creating new implementations
+- Keep files under 200-300 lines, refactor when necessary
+- Focus on code areas relevant to the current task
+- Avoid touching unrelated code during feature development
+
 ## Environment Setup
 
 This application supports multiple OAuth providers. Configure the providers you want to use in `.env.local`:
@@ -63,6 +92,28 @@ The core OAuth library provides:
 - **Session Management**: Multi-provider session handling with HTTP-only cookies
 - **Profile Normalization**: Consistent user profile format across providers
 - **Error Handling**: Unified error system with user-friendly messages
+
+### Architecture Deep Dive
+
+#### Provider Registry Pattern
+The system uses a registry pattern (`lib/oauth/providers/index.ts`) that enables automatic provider discovery:
+- Providers are registered in a central `providers` object
+- Profile normalizers are mapped in `profileNormalizers` object
+- Configuration validation automatically detects available providers
+- UI components dynamically render only configured providers
+
+#### Session Architecture
+- **HTTP-only cookies**: Secure, server-side session storage
+- **Multi-provider support**: Single session can contain multiple OAuth providers
+- **Automatic expiration**: Sessions include timestamp and expiration handling
+- **Profile normalization**: Consistent `UserProfile` interface across all providers
+
+#### Profile Normalization System
+Each provider implements a normalizer function that:
+- Converts provider-specific profile data to standard format
+- Preserves original data in `raw` field for provider-specific features
+- Handles missing fields gracefully (email, name parsing, etc.)
+- Ensures consistent user experience across all providers
 
 ### Key Components:
 
@@ -135,12 +186,69 @@ The system provides comprehensive error handling:
 - **Configuration Errors**: Missing credentials detection
 - **User-Friendly Messages**: Translated error messages
 
-### Usage Examples:
+### Provider Extension Pattern
 
-#### Adding a New Provider:
-1. Create provider configuration in `lib/oauth/providers/`
-2. Add environment variables
-3. Provider appears automatically in login interface
+#### Adding a New Provider (Complete Steps):
+1. **Create provider configuration** in `lib/oauth/providers/newprovider.ts`:
+   ```typescript
+   export const newproviderProvider: OAuthProvider = {
+     id: 'newprovider',
+     name: 'newprovider',
+     displayName: 'New Provider',
+     color: '#FF6B6B',
+     icon: 'newprovider',
+     authUrl: 'https://provider.com/oauth/authorize',
+     tokenUrl: 'https://provider.com/oauth/token',
+     userInfoUrl: 'https://provider.com/api/user',
+     scopes: ['profile', 'email'],
+     responseType: 'code',
+     grantType: 'authorization_code',
+     pkceSupported: true,
+     stateRequired: true
+   }
+   
+   export function normalizeNewproviderProfile(profile: any) {
+     return {
+       id: profile.id,
+       email: profile.email,
+       name: profile.name,
+       displayName: profile.username,
+       avatar: profile.avatar_url
+     }
+   }
+   ```
+
+2. **Register provider** in `lib/oauth/providers/index.ts`:
+   ```typescript
+   import { newproviderProvider, normalizeNewproviderProfile } from './newprovider'
+   
+   export const providers = {
+     // ... existing providers
+     newprovider: newproviderProvider
+   }
+   
+   export const profileNormalizers = {
+     // ... existing normalizers
+     newprovider: normalizeNewproviderProfile
+   }
+   ```
+
+3. **Add environment variables**:
+   ```bash
+   NEWPROVIDER_CLIENT_ID=your_client_id
+   NEWPROVIDER_CLIENT_SECRET=your_client_secret
+   ```
+
+4. **Restart server** - Provider appears automatically in login interface!
+
+#### Why This Pattern Works
+- **Zero core changes**: No modifications to routes, UI, or session management
+- **Auto-discovery**: Configuration validation detects new providers
+- **Type safety**: TypeScript ensures correct implementation
+- **Consistent UX**: All providers work identically for users
+- **Easy testing**: Each provider is isolated and testable
+
+### Usage Examples:
 
 #### Custom OAuth Flow:
 ```typescript
@@ -183,6 +291,30 @@ const user = await SessionManager.getUser()
 - All authentication errors are handled with user-friendly messages
 - The codebase follows Next.js 15 App Router conventions with server and client components clearly separated
 - OAuth library is designed to be reusable across different Next.js projects
+
+### Build Configuration
+- ESLint and TypeScript errors are temporarily ignored during builds (see `next.config.ts`)
+- This allows for faster development iteration but should be addressed before production
+
+### Provider-Specific Callback URLs
+Each provider requires exact callback URL configuration:
+- **LINE**: `http://localhost:3000/api/auth/line/callback`
+- **Google**: `http://localhost:3000/api/auth/google/callback`
+- **Facebook**: `http://localhost:3000/api/auth/facebook/callback`
+- **GitHub**: `http://localhost:3000/api/auth/github/callback`
+- **Discord**: `http://localhost:3000/api/auth/discord/callback`
+- **Twitter**: `http://localhost:3000/api/auth/twitter/callback`
+
+### Environment Variable Format
+```bash
+# Standard format for all providers
+{PROVIDER}_CLIENT_ID=your_client_id
+{PROVIDER}_CLIENT_SECRET=your_client_secret
+
+# Exception: LINE uses channel terminology
+LINE_CLIENT_ID=your_channel_id
+LINE_CLIENT_SECRET=your_channel_secret
+```
 
 ## Testing OAuth Providers
 
