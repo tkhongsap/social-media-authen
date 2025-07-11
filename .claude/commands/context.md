@@ -1,35 +1,53 @@
----
-description: Get quick context about the current project and recent work
-allowed-tools: [Read, Bash, Grep, Glob, LS]
----
+# Codebase Context Gathering
 
-Provide a comprehensive context summary of the current project including:
+Gather comprehensive context about the current codebase and project structure to better understand the development environment and make informed decisions.
 
-1. **Project Overview**: 
-   - Read CLAUDE.md for project-specific instructions
-   - Check README.md for general project information
+## Instructions for Claude Code
 
-2. **Current State**:
-   !git status --short
-   !git log --oneline -10
+When gathering context for: `$ARGUMENTS`
 
-3. **Recent Changes**:
-   !git diff --stat HEAD~5..HEAD
+1. **Project Structure Analysis**:
+   - Read package.json, requirements.txt, or equivalent dependency files
+   - Examine directory structure and organization
+   - Identify main entry points and configuration files
+   - Check for build tools, frameworks, and development setup
 
-4. **Architecture Summary**:
-   - Key directories and their purposes from CLAUDE.md
-   - Main entry points (glt_menu.py, glt.py)
-   - Available scripts in scripts/ directory
+2. **Codebase Overview**:
+   - Scan for main application files and modules
+   - Identify architectural patterns and coding conventions
+   - Look for existing components, services, and utilities
+   - Examine test files and testing frameworks
 
-5. **Configuration Status**:
-   - Check if .env file exists
-   - Verify essential environment variables are set
+3. **Development Environment**:
+   - Check for .env files and environment configuration
+   - Identify development scripts and build processes
+   - Look for linting, formatting, and code quality tools
+   - Examine CI/CD configurations if present
 
-6. **Development Commands**:
-   - Testing: pytest
-   - Linting: flake8, mypy, black
-   - Menu: python glt_menu.py
+4. **Documentation and Configuration**:
+   - Read README files and documentation
+   - Check for API documentation or comments
+   - Examine configuration files (tsconfig, eslint, etc.)
+   - Look for project-specific guidelines or standards
 
-Focus: $ARGUMENTS
+5. **Context Gathering Strategy**:
+   - Use parallel file reading for efficiency
+   - Search for key patterns and file types
+   - Analyze imports and dependencies
+   - Map relationships between modules
 
-Provide a concise summary focusing on what's most relevant for continuing work.
+6. **Key Files to Prioritize**:
+   - `package.json`, `requirements.txt`, `Cargo.toml`, etc.
+   - `README.md`, `CONTRIBUTING.md`
+   - Main application files (`index.js`, `main.py`, `app.ts`)
+   - Configuration files (`.env`, `config/`, `tsconfig.json`)
+   - Test directories and files
+   - Build and deployment scripts
+
+7. **Output Format**:
+   - Provide a structured summary of findings
+   - Highlight important patterns and conventions
+   - Identify potential areas of interest for the given task
+   - Suggest next steps based on context
+
+Execute comprehensive context gathering to provide a solid foundation for understanding the project and making informed development decisions.
